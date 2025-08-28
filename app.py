@@ -464,8 +464,8 @@ def run_stream(user_input, selected_assistant_id):
                                 st.session_state.download_info = download_info
                     break  # Only show the latest assistant message
         else:
-            with st.chat_message("Assistant"):
-                st.markdown("Hi hello test message http://localhost:8501/templates/atto di costituzione societa tipo SNC.docx", True)
+            # with st.chat_message("Assistant"):
+            #     st.markdown("Hi hello test message http://localhost:8501/templates/atto di costituzione societa tipo SNC.docx", True)
 
             st.session_state.chat_log.append({"name": "assistant", "msg": 'Hi hello test message http://localhost:8501/templates/atto di costituzione societa tipo SNC.docx'})
             download_info = {
