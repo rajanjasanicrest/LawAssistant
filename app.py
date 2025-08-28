@@ -500,18 +500,13 @@ def handle_uploaded_file(uploaded_file):
 
 
 def render_chat():
-    """Render chat messages"""
+    """Render chat messages without duplication"""
     chats = st.session_state.chat_log
-    
-    # If we just submitted a message, skip rendering the last user message to avoid duplication
-    if (st.session_state.get("just_submitted", False) and 
-        chats and 
-        chats[-1]["name"] == "user"):
-        chats = chats[:-1]  # Skip the last message if it's the user message we just showed
-    
+
     for chat in chats:
         with st.chat_message(chat["name"]):
-            st.markdown(chat["msg"], True)
+            st.markdown(chat["msg"], unsafe_allow_html=True)
+
 
 
 # Initialize session state
