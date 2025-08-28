@@ -1,0 +1,21 @@
+Repertorio n.	Raccolta n.
+ATTO COSTITUTIVO DELLA SOCIETA' A RESPONSABILITA' LIMITATA
+"<denominazione (m)> "
+REPUBBLICA ITALIANA
+Il <data stipula (d2)>  <*luogo stipula>  avanti a me dott.Marco TRIBUZIO Notaio in Bari, iscritto nel ruolo dei notai del Distretto notarile di Bari sono presenti i signori:
+<*comparenti (r)> costituiti, cittadini italiani, della cui identità personale io notaio sono certo convengono e stipulano quanto segue:
+ARTICOLO 1 = COSTITUZIONE. E' costituita tra <nominativo (s)>  una Società a responsabilità limitata sotto la denominazione "<denominazione> ".
+ARTICOLO 2 = SEDE. La Società ha sede in <sede società>  alla <via e numero società> .
+ARTICOLO 3 = DURATA. La Società ha durata fino al <data durata società (d2)> , ma potrà essere prorogata od anticipatamente sciolta con deliberazione dell'Assemblea dei soci.
+ARTICOLO 4 = OGGETTO. La Società ha per oggetto: <descrizione oggetto sociale> .Società può compiere, inoltre, tutte le operazioni mobiliari, immobiliari e finanziarie aventi pertinenza con l'oggetto sociale.potrà, inoltre, assumere interessenze, quote, partecipazioni anche azionarie in altre società aventi scopi affini, analoghi o connessi col proprio.
+ARTICOLO 5 = CAPITALE SOCIALE. Il capitale sociale è fissato in lire <capitale sociale (n1)>  ed è diviso in quote ai sensi dell'art. 2474 c.c..capitale viene assunto e sottoscritto dai soci costituenti nelle seguenti rispettive misure:
+<descrizione quote soci> .componenti dichiarano di aver versato presso la locale sede della <nome banca>  la somma di lire <somma tre decimi (n1)>  corrispondente ai tre decimi del capitale sottoscritto e mi presentano regolare ricevuta della Banca suddetta in data <data ricevuta (d1)>  che, in copia certificata conforme da me notaio in data odierna, si allega al presente atto sotto la lettera "A".
+ARTICOLO 6 = ESERCIZIO SOCIALE. Gli esercizi sociali si chiuderanno il <giorno chiusura (n2)>  <mese chiusura>  di ciascun anno. Il primo esercizio si chiuderà il <data chiusura primo esercizio (d2)> .
+ARTICOLO 7 = STATUTO. La Società si dichiara costituita sotto la piena osservanza delle norme contenute in questo atto e di quelle stabilite nello Statuto Sociale che si allega al presente atto sotto la lettera "B" per formarne parte integrale e sostanziale.
+ARTICOLO 8 = AMMINISTRAZIONE E RAPPRESENTANZA. <*cons.amministrazione/amministratore unico> <*collegio sindacale> 
+ARTICOLO 9 = OMOLOGAZIONE. I comparenti dichiarano di autorizzare l'amministratore unico a curare le pratiche occorrenti per la legale costituzione della Società e l'autorizzano ad apportare nel presente atto ed allegato Statuto quelle modifiche ed aggiunte che fossero richieste dalla Competente Autorità Giudiziaria ai fini dell'omologazione di legge.
+ARTICOLO 10 = RITIRO DEI TRE DECIMI. I comparenti autorizzano <dati persona che ritira i 3/10> , a riscuotere i tre decimi del capitale sociale presso la Banca depositaria, con facoltà di rilasciare quietanza esonerando il detto Istituto da ogni responsabilità al riguardo.
+ARTICOLO 11 = SPESE. Sono a carico della Società le spese del presente atto nonché quelle necessarie per la sua costituzione le quali complessivamente ammontano, in modo approssimativo, a lire <spese atto (n1)> .
+<*chiusura>  
+ 
+

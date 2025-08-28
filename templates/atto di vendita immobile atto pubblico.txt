@@ -1,0 +1,25 @@
+<*chiusura=1>Repertorio n° <repertorio (n3)>	Raccolta n° <raccolta (n3)>
+VENDITA
+REPUBBLICA ITALIANA
+Il giorno <data stipula (d2) (m)>  <*luogo stipula>  avanti a me <*dati notaio> <*presenza testimoni> sono presenti:
+<*comparenti (r)>comparenti della cui identità personale io notaio sono certo, con il presente atto convengono e stipulano quanto segue:
+Articolo 1
+<*Descrizione vendita>
+Articolo 2
+<*prezzo>
+Articolo 3
+<*possesso>
+Articolo 4
+La vendita dell'immobile viene fatta a corpo, nello stato di fatto in cui l'immobile venduto attualmente si trova, conosciuto dalla parte acquirente, con tutte le aderenze e pertinenze, azioni, ragioni, usi e comunioni, servitù attive e passive se e come esistenti. La parte venditrice garantisce che l'immobile venduto è di sua esclusiva proprietà e disponibilità e le è pervenuto <descrizione provenienza>.  
+Articolo 5
+La parte venditrice garantisce altresì che l'immobile stesso è libero da oneri reali, vincoli o gravami, privilegi anche fiscali, iscrizioni o trascrizioni pregiudizievoli<*pregiudizievoli>  <*prelazione> <*spese condominiali>
+Articolo 6
+La parte venditrice <*legge47> <articolo=7><*pertinenze><*agevolazioni fiscali>
+Articolo <articolo>
+<*decreto 112> 
+Articolo <articolo>
+<*parentela><*INVIM>spese del presente atto e dipendenti <escluso>sono a carico della parte acquirente.
+<*chiusura> 
+ 
+ 
+

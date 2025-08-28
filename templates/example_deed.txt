@@ -1,0 +1,3 @@
+This is an example deed content.
+It lives in the local templates folder.
+Use get_file_content(file_name="example_deed.txt", format="text") to fetch me.
