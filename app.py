@@ -571,13 +571,13 @@ def load_chat_screen(assistant_id, assistant_title):
     )
     
     if user_msg:
-        # Show user message immediately for better UX
-        with st.chat_message("user"):
-            st.markdown(user_msg, True)
-        # Add to chat log and mark as just submitted to avoid duplication
+        # Just add to chat_log (don’t render immediately here)
         st.session_state.chat_log.append({"name": "user", "msg": user_msg})
         st.session_state.just_submitted = True
+        render_chat()
         run_stream(user_msg, assistant_id)
+
+
     else:
         st.session_state.just_submitted = False
 
