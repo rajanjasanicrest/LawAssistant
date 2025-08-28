@@ -502,6 +502,13 @@ def handle_uploaded_file(uploaded_file):
 def render_chat():
     """Render chat messages"""
     chats = st.session_state.chat_log
+    
+    # If we just submitted a message, skip rendering the last user message to avoid duplication
+    if (st.session_state.get("just_submitted", False) and 
+        chats and 
+        chats[-1]["name"] == "user"):
+        chats = chats[:-1]  # Skip the last message if it's the user message we just showed
+    
     for chat in chats:
         with st.chat_message(chat["name"]):
             st.markdown(chat["msg"], True)
@@ -525,6 +532,9 @@ if "function_calls_count" not in st.session_state:
 
 if "last_function_call" not in st.session_state:
     st.session_state.last_function_call = None
+
+if "just_submitted" not in st.session_state:
+    st.session_state.just_submitted = False
 
 
 def disable_form():
@@ -566,11 +576,15 @@ def load_chat_screen(assistant_id, assistant_title):
     )
     
     if user_msg:
-        # Show user message immediately while processing
+        # Show user message immediately for better UX
         with st.chat_message("user"):
             st.markdown(user_msg, True)
+        # Add to chat log and mark as just submitted to avoid duplication
         st.session_state.chat_log.append({"name": "user", "msg": user_msg})
+        st.session_state.just_submitted = True
         run_stream(user_msg, assistant_id)
+    else:
+        st.session_state.just_submitted = False
 
     render_chat()
 
