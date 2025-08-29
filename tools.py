@@ -154,8 +154,42 @@ def get_file_link(file_name: str, base_url: str = None):
         print(err)
         return json.dumps({"error": err})
 
+def update_docx_placeholders(file_name: str, replacements: dict):
+    """
+    Create a new .docx file with placeholders replaced.
+    Only placeholders change — everything else stays intact.
+    Returns JSON with download link info.
+    """
+    from docx import Document
+    import uuid
+    import os
+
+    tdir = _templates_dir()
+    base_path = tdir / file_name
+    if not base_path.exists():
+        return {"error": f"File {file_name} not found"}
+    
+    print('processing')
+
+    doc = Document(base_path)
+    for p in doc.paragraphs:
+        for placeholder, value in replacements.items():
+            if placeholder in p.text:
+                for run in p.runs:
+                    run.text = run.text.replace(placeholder, value)
+
+    # Save with unique ID
+    new_name = f"updated_{uuid.uuid4().hex}.docx"
+    new_path = tdir / new_name
+    doc.save(new_path)
+    base_url = os.environ.get("FILE_SERVER_BASE_URL", "http://localhost:8501/templates")
+    return f'''
+        "download_local": {"path": {str(new_path)}, "filename": {new_name}, "url": {f"{base_url}/{new_name}"}}
+    '''
+
 TOOL_MAP = {
     "list_available_files": list_available_files,
     "get_file_content": get_file_content,
     "get_file_link": get_file_link,
+    "update_docx_placeholders": update_docx_placeholders,
 }

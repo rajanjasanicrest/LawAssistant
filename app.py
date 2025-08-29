@@ -3,7 +3,7 @@ import base64
 import re
 import json
 import time
-import urllib.parse  # Add this import
+import urllib.parse
 
 import streamlit as st
 import openai
@@ -55,152 +55,6 @@ else:
     client = openai.OpenAI(api_key=openai_api_key)
 
 
-class EventHandler(AssistantEventHandler):
-    def __init__(self):
-        super().__init__()
-
-    @override
-    def on_event(self, event):
-        # Add debugging
-        print(f"Event received: {event.event}")
-        if hasattr(event, 'data') and hasattr(event.data, 'status'):
-            print(f"Run status: {event.data.status}")
-
-    @override
-    def on_run_step_created(self, run_step):
-        print(f"Run step created: {run_step.type}")
-        
-    @override
-    def on_run_step_done(self, run_step):
-        print(f"Run step completed: {run_step.type}")
-
-    @override
-    def on_run_step_failed(self, run_step):
-        print(f"Run step failed: {run_step.type}")
-        if run_step.last_error:
-            print(f"Error: {run_step.last_error}")
-            st.error(f"Run step failed: {run_step.last_error}")
-
-    @override 
-    def on_run_completed(self, run):
-        print(f"Run completed: {run.id}")
-        
-    @override
-    def on_run_failed(self, run):
-        print(f"Run failed: {run.id}")
-        if run.last_error:
-            print(f"Run error: {run.last_error}")
-            st.error(f"Run failed: {run.last_error}")
-            
-    @override
-    def on_run_cancelled(self, run):
-        print(f"Run cancelled: {run.id}")
-        
-    @override
-    def on_run_expired(self, run):
-        print(f"Run expired: {run.id}")
-        st.error("The assistant run has expired. Please try again.")
-
-    @override
-    def on_text_created(self, text):
-        print("Text created")
-        st.session_state.current_message = ""
-        with st.chat_message("Assistant"):
-            st.session_state.current_markdown = st.empty()
-
-    @override
-    def on_text_delta(self, delta, snapshot):
-        print("Text delta: ", delta.value if delta.value else "None")
-        if snapshot.value:
-            text_value = re.sub(
-                r"\[(.*?)\]\s*\(\s*(.*?)\s*\)", "Download Link", snapshot.value
-            )
-            st.session_state.current_message = text_value
-            st.session_state.current_markdown.markdown(
-                st.session_state.current_message, True
-            )
-
-    @override
-    def on_text_done(self, text):
-        print("Text done: ", text.value if text else "None")
-        format_text = format_annotation(text)
-        st.session_state.current_markdown.markdown(format_text, True)
-        st.session_state.chat_log.append({"name": "assistant", "msg": format_text})
-
-    @override
-    def on_tool_call_created(self, tool_call):
-        print("Tool call created: ", tool_call.type)
-        if tool_call.type == "code_interpreter":
-            st.session_state.current_tool_input = ""
-            with st.chat_message("Assistant"):
-                st.session_state.current_tool_input_markdown = st.empty()
-
-    @override
-    def on_tool_call_delta(self, delta, snapshot):
-        if 'current_tool_input_markdown' not in st.session_state:
-            with st.chat_message("Assistant"):
-                st.session_state.current_tool_input_markdown = st.empty()
-
-        if delta.type == "code_interpreter":
-            if delta.code_interpreter.input:
-                st.session_state.current_tool_input += delta.code_interpreter.input
-                input_code = f"### code interpreter\ninput:\n```python\n{st.session_state.current_tool_input}\n```"
-                st.session_state.current_tool_input_markdown.markdown(input_code, True)
-
-    @override
-    def on_tool_call_done(self, tool_call):
-        print(f"Tool call done: {tool_call.type}")
-        
-        # Prevent duplicate processing
-        if tool_call.id in [x.id for x in st.session_state.tool_calls]:
-            return
-            
-        st.session_state.tool_calls.append(tool_call)
-        
-        if tool_call.type == "code_interpreter":
-            input_code = f"### code interpreter\ninput:\n```python\n{tool_call.code_interpreter.input}\n```"
-            if 'current_tool_input_markdown' in st.session_state and st.session_state.current_tool_input_markdown:
-                st.session_state.current_tool_input_markdown.markdown(input_code, True)
-            # st.session_state.chat_log.append({"name": "assistant", "msg": input_code})
-            
-            for output in tool_call.code_interpreter.outputs:
-                if output.type == "logs":
-                    output_text = f"### code interpreter\noutput:\n```\n{output.logs}\n```"
-                    with st.chat_message("Assistant"):
-                        # st.markdown(output_text, True)
-                        st.session_state.chat_log.append(
-                            {"name": "assistant", "msg": output_text}
-                        )
-                elif output.type == "image":
-                    # Handle image outputs
-                    with st.chat_message("Assistant"):
-                        st.image(f"data:image/png;base64,{output.image.file_id}")
-                        
-        elif tool_call.type == "function":
-            # Function calls are now handled in the main run loop
-            print(f"Function call detected: {tool_call.function.name}")
-
-    # Note: on_run_requires_action is removed - function calls handled in main run loop
-
-    def handle_function_call(self, tool_call):
-        """Handle function tool calls - deprecated in favor of on_run_requires_action"""
-        print(f"Function call handled via on_run_requires_action: {tool_call.function.name}")
-        tool_call_id = tool_call.id
-        function_name = tool_call.function.name
-        arguments = json.loads(tool_call.function.arguments)
-
-        # Run the tool
-        if function_name in TOOL_MAP:
-            output = TOOL_MAP[function_name](**arguments)
-
-        return output
-
-    @override
-    def on_exception(self, exception):
-        print(f"Exception occurred: {exception}")
-        st.error(f"An error occurred: {str(exception)}")
-
-
 def create_thread(content):
     """Create a new thread"""
     try:
@@ -214,7 +68,6 @@ def create_thread(content):
 def create_message(thread, content):
     """Create a message in the thread"""
     try:
-                    
         message = client.beta.threads.messages.create(
             thread_id=thread.id, 
             role="user", 
@@ -226,19 +79,6 @@ def create_message(thread, content):
         print(f"Error creating message: {e}")
         st.error(f"Error creating message: {str(e)}")
         return None
-
-
-# def create_file_link(file_name, file_id):
-#     """Create downloadable file link"""
-#     try:
-#         content = client.files.content(file_id)
-#         content_type = content.response.headers["content-type"]
-#         b64 = base64.b64encode(content.text.encode(content.encoding)).decode()
-#         link_tag = f'<a href="data:{content_type};base64,{b64}" download="{file_name}">Download Link</a>'
-#         return link_tag
-#     except Exception as e:
-#         print(f"Error creating file link: {e}")
-#         return "Download Link"
 
 
 def format_annotation(text):
@@ -255,12 +95,6 @@ def format_annotation(text):
                 citations.append(
                     f"[{index}] {file_citation.quote} from {cited_file.filename}"
                 )
-            elif file_path := getattr(annotation, "file_path", None):
-                link_tag = create_file_link(
-                    annotation.text.split("/")[-1],
-                    file_path.file_id,
-                )
-                text_value = re.sub(r"\[(.*?)\]\s*\(\s*(.*?)\s*\)", link_tag, text_value)
                 
         if citations:
             text_value += "\n\n" + "\n".join(citations)
@@ -269,223 +103,225 @@ def format_annotation(text):
         print(f"Error formatting annotation: {e}")
         return text.value if text else ""
 
-def run_stream(user_input, selected_assistant_id):
-    """Run the assistant with streaming"""
-    try:
-        want_run = True
 
-        if want_run:
-            # Create thread if it doesn't exist
-            if "thread" not in st.session_state or st.session_state.thread is None:
-                st.session_state.thread = create_thread(user_input)
-                if st.session_state.thread is None:
-                    return
+def extract_download_info(text):
+    """Extract download information from text"""
+    # More comprehensive regex patterns including markdown links
+    # patterns = [
+    #     # Markdown link format: [text](url)
+    #     r"\[.*?\]\((https?://[^\s\)]+?\.docx(?:\?[^\s\)]*)?)\)",
+    #     # Direct URLs
+    #     r"https?://[^\s]+?\.docx(?:\?[^\s]*)?",
+    #     r"http://[^\s]+?/templates/[^\s]+?\.docx",
+    #     r"http://localhost:\d+/templates/[^\s]+?\.docx",
+    #     # Streamlit app URLs
+    #     r"https?://[^\s]*?streamlit\.app[^\s]*?/templates/[^\s]+?\.docx",
+    # ]
+    patterns = [
+        # Markdown link format: [text](url) - captures everything inside parentheses
+        r"\[.*?\]\((https?://.*?\.docx(?:\?[^)]*)?)\)",
+        # Direct URLs ending with .docx - captures until whitespace that's not part of filename
+        r"https?://\S*?[^\s]*\.docx(?:\?[^\s]*)?(?=\s|$|[.,;!?])",
+        # URLs with spaces - captures everything until common delimiters
+        r"https?://[^\n\r\t]*?\.docx(?:\?[^\n\r\t]*)?(?=\s*$|\s*[.,;!?\n\r\t]|\s+[A-Za-z])",
+        # Template URLs with potential spaces
+        r"https?://[^\n\r\t]*?/templates/[^\n\r\t]*?\.docx(?:\?[^\n\r\t]*)?(?=\s*$|\s*[.,;!?\n\r\t]|\s+[A-Za-z])",
+        # Localhost URLs with potential spaces
+        r"http://localhost:\d+/templates/[^\n\r\t]*?\.docx(?:\?[^\n\r\t]*)?(?=\s*$|\s*[.,;!?\n\r\t]|\s+[A-Za-z])",
+        # Streamlit app URLs with potential spaces
+        r"https?://[^\n\r\t]*?streamlit\.app[^\n\r\t]*?/templates/[^\n\r\t]*?\.docx(?:\?[^\n\r\t]*)?(?=\s*$|\s*[.,;!?\n\r\t]|\s+[A-Za-z])",
+    ]
+    
+    
+    for pattern in patterns:
+        matches = re.findall(pattern, text)
+        if matches:
+            # Handle both direct matches and group matches from markdown
+            url = matches[0] if isinstance(matches[0], str) else matches[0]
+            print(f"Found URL: {url}")
             
-            # Create message
-            message = create_message(st.session_state.thread, user_input)
-            if message is None:
-                return
+            # Extract filename from URL
+            filename = url.split("/")[-1].split("?")[0]  # Remove query params
+            filename = urllib.parse.unquote(filename)
+            print(f"Extracted filename: {filename}")
+            
+            # Check if file exists locally
+            file_path = f'templates/{filename}'
+            print(f"Checking file at: {file_path}")
+            
+            if os.path.exists(file_path):
+                print(f"File found at: {file_path}")
+                return {
+                    'file_path': file_path,
+                    'filename': filename,
+                    'url': url
+                }
+            else:
+                print(f"File not found at: {file_path}")
+                # Still return the info even if file doesn't exist locally
+                # The assistant might have generated it
+                return {
+                    'file_path': file_path,
+                    'filename': filename,
+                    'url': url
+                }
                 
-            # Verify assistant exists
-            try:
-                assistant = client.beta.assistants.retrieve(selected_assistant_id)
-                print(f"Using assistant: {assistant.name}")
-            except Exception as e:
-                st.error(f"Assistant not found: {selected_assistant_id}")
-                print(f"Assistant error: {e}")
+    print("No download URLs found in text")
+    return None
+
+
+def run_assistant_stream(user_input, selected_assistant_id):
+    """Run the assistant with proper state management"""
+    try:
+        # Set processing state
+        st.session_state.in_progress = True
+        
+        # Create thread if it doesn't exist
+        if "thread" not in st.session_state or st.session_state.thread is None:
+            st.session_state.thread = create_thread(user_input)
+            if st.session_state.thread is None:
+                st.session_state.in_progress = False
                 return
+        
+        # Create message
+        message = create_message(st.session_state.thread, user_input)
+        if message is None:
+            st.session_state.in_progress = False
+            return
             
-            # Start run (non-streaming for function calls)
-            print(f"Starting run with assistant: {selected_assistant_id}")
-            run = client.beta.threads.runs.create(
+        # Verify assistant exists
+        try:
+            assistant = client.beta.assistants.retrieve(selected_assistant_id)
+            print(f"Using assistant: {assistant.name}")
+        except Exception as e:
+            st.error(f"Assistant not found: {selected_assistant_id}")
+            print(f"Assistant error: {e}")
+            st.session_state.in_progress = False
+            return
+        
+        # Start run
+        print(f"Starting run with assistant: {selected_assistant_id}")
+        run = client.beta.threads.runs.create(
+            thread_id=st.session_state.thread.id,
+            assistant_id=selected_assistant_id,
+        )
+        
+        max_iterations = 60
+        iteration = 0
+        
+        while iteration < max_iterations:
+            iteration += 1
+            
+            # Get current run status
+            run = client.beta.threads.runs.retrieve(
                 thread_id=st.session_state.thread.id,
-                assistant_id=selected_assistant_id,
+                run_id=run.id
             )
+            print(f"Run status: {run.status} (iteration {iteration})")
             
-            # Poll for completion and handle function calls
-            max_iterations = 60  # Increased timeout for complex processing
-            iteration = 0
-            
-            # Create loading animation placeholder outside chat message context
-            loading_placeholder = st.empty()
+            if run.status == "completed":
+                print("✅ Run completed successfully!")
+                break
                 
-            # Loading messages for variety
-            loading_messages = [
-                "🤖 Analyzing your request",
-                "🔍 Searching legal documents", 
-                "📋 Processing information",
-                "⚖️ Reviewing legal requirements",
-                "📝 Preparing response"
-            ]
+            elif run.status == "requires_action":
+                print("🔧 Function calling required!")
                 
-            while iteration < max_iterations:
-                iteration += 1
+                tool_calls = run.required_action.submit_tool_outputs.tool_calls
+                tool_outputs = []
                 
-                # Show loading animation with cycling dots and messages
-                loading_dots = "." * ((iteration % 3) + 1)
-                message_index = (iteration // 3) % len(loading_messages)
-                current_message = loading_messages[message_index]
-                loading_placeholder.markdown(f"{current_message}{loading_dots}")
-                
-                # Get current run status
-                run = client.beta.threads.runs.retrieve(
-                    thread_id=st.session_state.thread.id,
-                    run_id=run.id
-                )
-                print(f"Run status: {run.status} (iteration {iteration})")
-                
-                if run.status == "completed":
-                    print("✅ Run completed successfully!")
-                    loading_placeholder.empty()  # Clear loading animation
-                    break
-                elif run.status == "requires_action":
-                    print("🔧 Function calling required!")
-                    loading_placeholder.markdown("🔧 Executing tools...")
+                for tool_call in tool_calls:
+                    function_name = tool_call.function.name
+                    function_args = json.loads(tool_call.function.arguments)
                     
-                    tool_calls = run.required_action.submit_tool_outputs.tool_calls
-                    tool_outputs = []
                     
-                    for tool_call in tool_calls:
-                        function_name = tool_call.function.name
-                        function_args = json.loads(tool_call.function.arguments)
-                        
-                        # Update loading message for specific function
-                        if function_name == "read_file":
-                            loading_placeholder.markdown("📖 Reading document...")
-                        elif function_name == "write_file":
-                            loading_placeholder.markdown("💾 Creating document...")
-                        elif function_name == "search_documents":
-                            loading_placeholder.markdown("🔍 Searching legal database...")
-                        else:
-                            loading_placeholder.markdown(f"⚙️ Executing {function_name}...")
-                        
-                        print(f"  Calling: {function_name}({function_args})")
-                        
-                        if function_name in TOOL_MAP:
-                            try:
-                                output = TOOL_MAP[function_name](**function_args)
-                                print(f"  Result: {output[:100]}..." if len(str(output)) > 100 else f"  Result: {output}")
-                                
-                                tool_outputs.append({
-                                    "tool_call_id": tool_call.id,
-                                    "output": str(output)
-                                })
-                            except Exception as e:
-                                print(f"  Error: {e}")
-                                tool_outputs.append({
-                                    "tool_call_id": tool_call.id,
-                                    "output": f"Error: {e}"
-                                })
-                        else:
-                            print(f"  Unknown function: {function_name}")
+                    print(f"  Calling: {function_name}({function_args})")
+                    
+                    if function_name in TOOL_MAP:
+                        try:
+                            output = TOOL_MAP[function_name](**function_args)
+                            print(f"  Result: {output}")
+                            
                             tool_outputs.append({
                                 "tool_call_id": tool_call.id,
-                                "output": f"Error: Unknown function {function_name}"
+                                "output": output
                             })
-                    
-                    # Submit the outputs
-                    print(f"📤 Submitting {len(tool_outputs)} tool outputs...")
-                    run = client.beta.threads.runs.submit_tool_outputs(
-                        thread_id=st.session_state.thread.id,
-                        run_id=run.id,
-                        tool_outputs=tool_outputs
-                    )
-                    print("✅ Tool outputs submitted")
-                    
-                elif run.status in ["failed", "cancelled", "expired"]:
-                    print(f"❌ Run {run.status}")
-                    loading_placeholder.empty()  # Clear loading animation
-                    if run.last_error:
-                        print(f"Error: {run.last_error}")
-                    break
-                elif run.status in ["queued", "in_progress"]:
-                    # Continue polling
-                    import time
-                    time.sleep(1)
-                else:
-                    print(f"Unknown status: {run.status}")
-                    break
-            
-            if iteration >= max_iterations:
-                print("❌ Run timed out")
-                loading_placeholder.empty()  # Clear loading animation
-                return
+                        except Exception as e:
+                            print(f"  Error: {e}")
+                            tool_outputs.append({
+                                "tool_call_id": tool_call.id,
+                                "output": f"Error: {e}"
+                            })
+                    else:
+                        print(f"  Unknown function: {function_name}")
+                        tool_outputs.append({
+                            "tool_call_id": tool_call.id,
+                            "output": f"Error: Unknown function {function_name}"
+                        })
                 
-            # Get the final messages and display them
-            loading_placeholder.markdown("✅ Preparing response...")
-            time.sleep(0.5)  # Brief pause before showing response
-            loading_placeholder.empty()  # Clear loading animation
+                # Submit the outputs
+                print(f"📤 Submitting {len(tool_outputs)} tool outputs...")
+                run = client.beta.threads.runs.submit_tool_outputs(
+                    thread_id=st.session_state.thread.id,
+                    run_id=run.id,
+                    tool_outputs=tool_outputs
+                )
+                print("✅ Tool outputs submitted")
+                
+            elif run.status in ["failed", "cancelled", "expired"]:
+                print(f"❌ Run {run.status}")
+                if run.last_error:
+                    print(f"Error: {run.last_error}")
+                    st.error(f"Run {run.status}: {run.last_error}")
+                break
+                
+            elif run.status in ["queued", "in_progress"]:
+                time.sleep(1)
+            else:
+                print(f"Unknown status: {run.status}")
+                break
+        
+        if iteration >= max_iterations:
+            print("❌ Run timed out")
+            st.error("The request timed out. Please try again.")
+            st.session_state.in_progress = False
+            return
             
-            messages = client.beta.threads.messages.list(thread_id=st.session_state.thread.id)
-            
-            # Store download info in session state to persist across reruns
-            download_info = None
-            
-            for message in messages.data:
-                if message.role == "assistant" and message.created_at > (time.time() - 300):  # Recent messages
-                    for content in message.content:
-                        if content.type == "text":
-                            formatted_text = format_annotation(content.text)
-                            
-                            # Replace URLs in the text for display
-                            display_text = formatted_text.replace('https://example.com/', os.environ.get("FILE_SERVER_BASE_URL", "http://localhost:8501/templates/"))
-                            
-                            # Check for download URLs
-                            url_pattern = r"http?://[^\s]+?(?:%[0-9A-Fa-f]{2}|[^\s%])*\.docx(?:\?[^\s]*)?"
-                            urls = re.findall(url_pattern, display_text)
-                            
-                            if urls:
-                                print('url found')
-                                url = urls[0]
-                                print(f"Processing URL: {url}")
-                                filename = url.split("/")[-1]
-                                print(f"Extracted filename: {filename}")
-                                
-                                # URL decode the filename
-                                filename = urllib.parse.unquote(filename)
-                                print(f"Decoded filename: {filename}")
-                                
-                                file_path = f'templates/{filename}'
-                                print(f"Looking for file at: {file_path}")
-                                print(f"File exists: {os.path.exists(file_path)}")
-                                
-                                if os.path.exists(file_path):
-                                    # Store download info for later use
-                                    download_info = {
-                                        'file_path': file_path,
-                                        'filename': filename,
-                                        'url': url
-                                    }
-                            
-                            # Only append assistant message to chat_log, do NOT render inline
-                            st.session_state.chat_log.append({"name": "assistant", "msg": display_text})
-                            # Add download button info if file exists
-                            if download_info:
-                                st.session_state.download_info = download_info
-                    break  # Only show the latest assistant message
-        else:
-            # with st.chat_message("Assistant"):
-            #     st.markdown("Hi hello test message http://localhost:8501/templates/atto di costituzione societa tipo SNC.docx", True)
-
-            st.session_state.chat_log.append({"name": "assistant", "msg": 'Hi hello test message http://localhost:8501/templates/atto di costituzione societa tipo SNC.docx'})
-            download_info = {
-                'file_path': 'templates/atto di costituzione societa tipo SNC.docx',
-                'filename': 'atto di costituzione societa tipo SNC.docx',
-                'url': 'http://localhost:8501/templates/atto di costituzione societa tipo SNC.docx'
-            }
-            # Add download button immediately after the message if file exists
-            if download_info:
-                st.session_state.download_info = download_info
-
+        # Get the final messages and display them
+        time.sleep(0.5)
+        
+        messages = client.beta.threads.messages.list(thread_id=st.session_state.thread.id)
+        
+        # Process the latest assistant message
+        for message in messages.data:
+            if message.role == "assistant" and message.created_at > (time.time() - 300):
+                for content in message.content:
+                    if content.type == "text":
+                        formatted_text = format_annotation(content.text)
+                        
+                        # Replace URLs in the text for display
+                        display_text = formatted_text.replace(
+                            'https://example.com/', 
+                            os.environ.get("FILE_SERVER_BASE_URL", "http://localhost:8501/templates/")
+                        )
+                        
+                        # Check for download info
+                        download_info = extract_download_info(display_text)
+                        if download_info:
+                            st.session_state.download_info = download_info
+                            print(f"Download info stored: {download_info['filename']}")
+                        
+                        # Add to chat log (this will be rendered by render_chat)
+                        st.session_state.chat_log.append({"name": "assistant", "msg": display_text})
+                        
+                break  # Only process the latest message
+                
     except Exception as e:
-        print(f"Error in run_stream: {e}")
-        # Clear loading animation if it exists
-        if 'loading_placeholder' in locals():
-            loading_placeholder.empty()
+        print(f"Error in run_assistant_stream: {e}")
         st.error(f"Error running assistant: {str(e)}")
     finally:
-        # Re-enable chat input after response
+        # Always reset processing state
         st.session_state.in_progress = False
+
 
 def handle_uploaded_file(uploaded_file):
     """Handle file upload to OpenAI"""
@@ -500,40 +336,88 @@ def handle_uploaded_file(uploaded_file):
 
 
 def render_chat():
-    """Render chat messages without duplication"""
-    chats = st.session_state.chat_log
-
-    for chat in chats:
+    """Render chat messages"""
+    for chat in st.session_state.chat_log:
         with st.chat_message(chat["name"]):
             st.markdown(chat["msg"], unsafe_allow_html=True)
 
 
+def render_download_button():
+    """Render download button if available"""
+    if "download_info" in st.session_state and st.session_state.download_info:
+        info = st.session_state.download_info
+        try:
+            with open(info['file_path'], "rb") as f:
+                file_bytes = f.read()
 
-# Initialize session state
-if "tool_calls" not in st.session_state:
-    st.session_state.tool_calls = []
+            st.markdown("---")
+            st.markdown("## 📥 Your document is ready:")
+            st.download_button(
+                label="📄 Download Template",
+                data=file_bytes,
+                file_name=info['filename'],
+                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                key=f"download_{info['filename']}_{len(st.session_state.chat_log)}"
+            )
+        except Exception as e:
+            st.error(f"Error creating download button: {e}")
 
-if "chat_log" not in st.session_state:
+
+def reset_chat():
+    """Reset chat and create new thread"""
     st.session_state.chat_log = []
-
-if "in_progress" not in st.session_state:
     st.session_state.in_progress = False
-
-if "thread" not in st.session_state:
     st.session_state.thread = None
-
-if "function_calls_count" not in st.session_state:
-    st.session_state.function_calls_count = 0
-
-if "last_function_call" not in st.session_state:
-    st.session_state.last_function_call = None
-
-if "just_submitted" not in st.session_state:
-    st.session_state.just_submitted = False
+    if "download_info" in st.session_state:
+        del st.session_state.download_info
 
 
-def disable_form():
-    st.session_state.in_progress = True
+def load_chat_screen(assistant_id, assistant_title):
+    """Load the main chat interface"""
+    
+    # Initialize session state
+    if "chat_log" not in st.session_state:
+        st.session_state.chat_log = []
+    if "in_progress" not in st.session_state:
+        st.session_state.in_progress = False
+    if "thread" not in st.session_state:
+        st.session_state.thread = None
+
+    # Reset chat button in sidebar
+    if st.sidebar.button("Reset Chat"):
+        reset_chat()
+        st.rerun()
+
+    st.title(assistant_title if assistant_title else "Italian Law Assistant")
+
+    # Render existing chat messages
+    render_chat()
+    
+    # Render download button if available
+    render_download_button()
+
+    # Chat input - process immediately when submitted
+    user_msg = st.chat_input(
+        "Ask me about legal documents...", 
+        disabled=st.session_state.in_progress
+    )
+    
+    # Handle new user message
+    if user_msg and not st.session_state.in_progress:
+        # Add user message to chat log and show immediately
+        st.session_state.chat_log.append({"name": "user", "msg": user_msg})
+        
+        # Show user message immediately
+        with st.chat_message("user"):
+            st.session_state.download_info = None  # Clear previous download info
+            st.markdown(user_msg, True)
+        
+        # Process with assistant
+        with st.spinner("Processing your request..."):
+            run_assistant_stream(user_msg, assistant_id)
+        
+        # Rerun to update UI with assistant response
+        st.rerun()
 
 
 def login():
@@ -542,67 +426,6 @@ def login():
     elif st.session_state["authentication_status"] is None:
         st.warning("Please enter your username and password")
 
-
-def reset_chat():
-    """Reset chat and create new thread"""
-    st.session_state.chat_log = []
-    st.session_state.in_progress = False
-    st.session_state.thread = None
-    st.session_state.tool_calls = []
-    st.session_state.function_calls_count = 0
-    st.session_state.last_function_call = None
-
-
-def load_chat_screen(assistant_id, assistant_title):
-    """Load the main chat interface"""
-
-    # Reset chat button
-    if st.sidebar.button("Reset Chat"):
-        reset_chat()
-        st.session_state.download_info = None
-        st.rerun()
-
-    st.title(assistant_title if assistant_title else "Italian Law Assistant")
-
-    user_msg = st.chat_input(
-        "Ask me about legal documents...", 
-        on_submit=disable_form, 
-        disabled=st.session_state.in_progress
-    )
-    
-    if user_msg:
-        # Just add to chat_log (don’t render immediately here)
-        st.session_state.chat_log.append({"name": "user", "msg": user_msg})
-        st.session_state.just_submitted = True
-        render_chat()
-        run_stream(user_msg, assistant_id)
-
-
-    else:
-        st.session_state.just_submitted = False
-
-    render_chat()
-
-    # Show download button if available, but do NOT re-render chat
-    if "download_info" in st.session_state:
-        info = st.session_state.download_info
-        if info:
-            try:
-                with open(info['file_path'], "rb") as f:
-                    file_bytes = f.read()
-
-                # Force it into its own container so it’s always visible
-                with st.container():
-                    st.markdown("## 📥 Your document is ready:")
-                    st.download_button(
-                        label="📄 Download Template",
-                        data=file_bytes,
-                        file_name=info['filename'],
-                        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                        key="persistent_download"
-                    )
-            except Exception as e:
-                st.error(f"Error creating download button: {e}")
 
 def main():
     """Main application function"""
